@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'spot_screen.dart';
 
-// Entry point for ParkEase web app
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Grab spot id from the query: .../?id=S1 (case-sensitive)
   final spotId = Uri.base.queryParameters['id'];
-
   runApp(ParkEaseWebApp(spotId: spotId));
 }
 
@@ -20,14 +16,23 @@ class ParkEaseWebApp extends StatelessWidget {
     return MaterialApp(
       title: 'ParkEase Web',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.indigo),
-      // Home: Show error if id is missing, otherwise load ticket screen
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        scaffoldBackgroundColor: const Color(0xFFF4F7FA),
+        fontFamily: 'Roboto',
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: Colors.green.shade100,
+          actionTextColor: Colors.green[900],
+          contentTextStyle: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+      ),
       home: (spotId == null || spotId!.isEmpty)
           ? const Scaffold(
               body: Center(
                 child: Text(
-                  'No spot ID provided. Scan a valid QR!',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  'No spot ID provided.\nScan a valid QR!',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.red),
+                  textAlign: TextAlign.center,
                 ),
               ),
             )
