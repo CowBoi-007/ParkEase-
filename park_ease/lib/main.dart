@@ -12,7 +12,7 @@ Future<void> seedFakeSpots() async {
         'name': 'Spot $i',
         'occupied': i % 3 == 0,
       };
-      box.put(spotId, spot);
+      await box.put(spotId, spot);
     }
   }
 }
@@ -30,9 +30,11 @@ class ParkEaseAdminApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    // DO NOT use `const` here for MaterialApp if any child widget (like DashboardScreen) is not a const constructor!
+    return MaterialApp(
       title: 'ParkEase',
-      home: DashboardScreen(),
+      debugShowCheckedModeBanner: false,
+      home: DashboardScreen(), // <--- No const before DashboardScreen
     );
   }
 }

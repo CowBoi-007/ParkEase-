@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../models/spot.dart';
 import '../../services/api_services.dart';
@@ -13,56 +14,62 @@ class SpotsScreen extends StatefulWidget {
 class _SpotsScreenState extends State<SpotsScreen> {
   List<Spot> spots = [];
   List<Spot> filteredSpots = [];
-  TextEditingController searchController = TextEditingController();
+  final TextEditingController searchController = TextEditingController();
   bool isLoading = true;
+  late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     loadSpots();
     searchController.addListener(_searchSpots);
+    // Auto-refresh every 10 seconds
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) => loadSpots());
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    searchController.removeListener(_searchSpots);
+    searchController.dispose();
+    super.dispose();
   }
 
   Future<void> loadSpots() async {
     setState(() => isLoading = true);
     spots = await ApiService.fetchAllSpots();
     filteredSpots = spots;
-    setState(() => isLoading = false);
+    if (mounted) setState(() => isLoading = false);
   }
 
   void _searchSpots() {
-    String query = searchController.text.toLowerCase();
+    final query = searchController.text.toLowerCase();
     setState(() {
-      filteredSpots = spots.where((spot) =>
-          spot.name.toLowerCase().contains(query) ||
-          spot.id.toLowerCase().contains(query)).toList();
+      filteredSpots = spots.where(
+        (spot) =>
+            spot.name.toLowerCase().contains(query) ||
+            spot.id.toLowerCase().contains(query),
+      ).toList();
     });
   }
 
-  void generateQR(Spot spot) async {
+  Future<void> generateQR(Spot spot) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => QRGeneratorScreen(spot: spot, allSpots: spots),
       ),
     );
-    loadSpots();
+    await loadSpots();
   }
 
-  void assignSpot(Spot spot) async {
+  Future<void> assignSpot(Spot spot) async {
     await ApiService.assignSpot(spot.id);
-    loadSpots();
+    await loadSpots();
   }
 
-  void freeSpot(Spot spot) async {
+  Future<void> freeSpot(Spot spot) async {
     await ApiService.freeSpot(spot.id);
-    loadSpots();
-  }
-
-  @override
-  void dispose() {
-    searchController.removeListener(_searchSpots);
-    searchController.dispose();
-    super.dispose();
+    await loadSpots();
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../models/spot.dart';
 import '../../services/api_services.dart';
@@ -5,7 +6,7 @@ import '../qr/qr_generator_screen.dart';
 import '../spots/spots_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  const DashboardScreen({Key? key}) : super(key: key);
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -17,11 +18,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int availableSpots = 0;
   bool isLoading = true;
   List<Spot> latestSpots = [];
+  late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     loadData();
+    // Refresh every 10 seconds
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) => loadData());
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   Future<void> loadData() async {
@@ -45,7 +55,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void showNextAvailableSpotQR() async {
+  Future<void> showNextAvailableSpotQR() async {
     final spots = await ApiService.fetchAllSpots();
     Spot? nextSpot;
     for (final spot in spots) {
@@ -56,12 +66,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
     if (nextSpot != null) {
       if (!mounted) return;
-      Navigator.of(context).push(
+      await Navigator.of(context).push(
         MaterialPageRoute(
-          // Pass both spot and full list!
           builder: (_) => QRGeneratorScreen(spot: nextSpot!, allSpots: spots),
         ),
       );
+      if (!mounted) return;
+      await loadData();
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -72,7 +83,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> openSpotsScreen() async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SpotsScreen()),
+      MaterialPageRoute(
+        builder: (_) => SpotsScreen(),
+      ),
     );
     if (result == true && mounted) loadData();
   }

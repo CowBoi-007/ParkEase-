@@ -35,4 +35,7 @@ class ApiService {
     final response = await http.post(Uri.parse('$baseUrl/api/spots/$id/free'));
     return response.statusCode == 200;
   }
+
+  /// Fix: Add this alias for backward compatibility with your screens.
+  static Future<bool> releaseSpot(String id) => freeSpot(id);
 }

@@ -14,18 +14,20 @@ class QRGeneratorScreen extends StatefulWidget {
 }
 
 class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
-  int currentIndex = 0;
+  late int currentIndex;
   String assignMessage = '';
 
   @override
   void initState() {
     super.initState();
     currentIndex = widget.allSpots.indexWhere((s) => s.id == widget.spot.id);
+    if (currentIndex < 0) currentIndex = 0; // fallback to first spot
   }
 
-  void handleAssign() async {
+  Future<void> handleAssign() async {
     final spot = widget.allSpots[currentIndex];
     bool ok = await ApiService.assignSpot(spot.id);
+    if (!mounted) return;
     setState(() {
       assignMessage = ok ? 'Assigned!' : 'Failed to assign';
     });
@@ -40,7 +42,7 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // <-- Replace with your ngrok frontend URL here
+    // Replace with your frontend ngrok URL as needed
     const String baseUrl = 'https://psilotic-notal-amira.ngrok-free.dev';
     final spot = widget.allSpots[currentIndex];
     final String qrData = '$baseUrl/?id=${spot.id}';
@@ -57,8 +59,8 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
               size: 230,
             ),
             const SizedBox(height: 12),
-            Text(qrData),
-            const SizedBox(height: 12),
+            Text(qrData, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -73,10 +75,17 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
                 ),
               ],
             ),
-            if (assignMessage.isNotEmpty) Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(assignMessage),
-            ),
+            if (assignMessage.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  assignMessage,
+                  style: TextStyle(
+                    color: assignMessage == 'Assigned!' ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
